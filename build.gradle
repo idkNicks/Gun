@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'fr.flowarg.nmsremaphelper' version '1.0.2'
+}
+
+group = 'io.github.daawn'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    compileOnly "org.jetbrains:annotations:23.0.0"
+    compileOnly "org.projectlombok:lombok:1.18.26"
+    annotationProcessor "org.projectlombok:lombok:1.18.26"
+
+    compileOnly "org.spigotmc:spigot:1.20.1-R0.1-SNAPSHOT:remapped-mojang"
+    compileOnly 'com.mojang:authlib:1.5.25'
+
+    implementation "com.google.guava:guava:31.1-jre"
+    implementation "commons-io:commons-io:2.11.0"
+    implementation "org.reflections:reflections:0.10.2"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('copyDependencies', Copy) {
+    from configurations.runtimeClasspath
+    into "$buildDir/libs"
+}
+
+nmsremaphelper {
+    spigotVersion = "1.20.1-R0.1-SNAPSHOT"
+}
+
+tasks.register('copyRuntimeDependencies', Copy) {
+    from configurations.runtimeClasspath
+    into "$buildDir/libs"
+}
+
+tasks.named('obfJar') {
+    inputs.files(tasks.named('copyRuntimeDependencies'))
+}
+
+tasks.register('createJar', Jar) {
+    archiveFileName = "Gun.jar"
+    destinationDirectory = file("D:\\v1\\대영\\스탈리 스토어\\개발용 버킷\\1.20.1\\plugins")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(zipTree(tasks.named("remapJar").get().outputs.files.singleFile))
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+createJar.dependsOn copyRuntimeDependencies, 'remapJar'
