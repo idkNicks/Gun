@@ -13,12 +13,15 @@ import java.util.List;
 public abstract class Gun {
 
     protected final GunPlugin plugin = GunPlugin.getInstance();
+    private final double BULLET_RANGE = 70.0;
 
+    private final GunType gunType;
     private final String name;
     private final double damage;
     private final double cooldown;
 
-    public Gun(String name, double damage, double cooldown) {
+    public Gun(GunType gunType, String name, double damage, double cooldown) {
+        this.gunType = gunType;
         this.name = name;
         this.damage = damage;
         this.cooldown = cooldown;
@@ -32,6 +35,7 @@ public abstract class Gun {
             if (gunName != null && gunName.equals(name)) {
                 ShootDelayTask gunTask = new ShootDelayTask(this, player);
                 if (gunTask.tryShoot()) {
+                    new Bullet(player, this.damage, BULLET_RANGE).fire();
                     specificShoot(player);
                     applyShootEffects(player);
                     playGunSounds(player, shootSounds());
